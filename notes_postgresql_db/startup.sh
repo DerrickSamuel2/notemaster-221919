@@ -129,6 +129,16 @@ GRANT CREATE ON SCHEMA public TO ${DB_USER};
 \dn+ public
 EOF
 
+# Run schema migrations (repeatable, tracked via schema_migrations)
+# This enables idempotent initialization compatible with container restarts.
+if [ -f "./run_migrations.sh" ]; then
+    chmod +x ./run_migrations.sh || true
+    echo "Applying DB migrations..."
+    DB_NAME="${DB_NAME}" DB_USER="${DB_USER}" DB_PASSWORD="${DB_PASSWORD}" DB_PORT="${DB_PORT}" PG_BIN="${PG_BIN}" ./run_migrations.sh
+else
+    echo "⚠ run_migrations.sh not found; skipping migrations."
+fi
+
 # Save connection command to a file
 echo "psql postgresql://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}" > db_connection.txt
 echo "Connection string saved to db_connection.txt"
